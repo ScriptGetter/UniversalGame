@@ -1,0 +1,191 @@
+--// Load WindUI
+local WindUI = loadstring(game:HttpGet("https://github.com/Footagesus/WindUI/releases/latest/download/main.lua"))()
+
+--// UI Window
+local Window = WindUI:CreateWindow({
+    Title = "Universal Game - " .. game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId).Name,
+    Icon = "public",
+    Author = "By Frenzy",
+    Folder = "CloudHub",
+    Size = UDim2.fromOffset(380, 560),
+    Transparent = true,
+    Theme = "Dark",
+    SideBarWidth = 120,
+    Background = "",
+    BackgroundImageTransparency = 0.42,
+    HideSearchBar = false,
+    ScrollBarEnabled = true,
+    User = {
+        Enabled = true,
+        Anonymous = false,
+        Callback = function()
+            print("User Button Clicked")
+        end,
+    },
+    KeySystem = {
+        Key = { "Frenzy", "Free_ja2ka2_7jpso_ie2p" },
+        Note = "Click Get Key To Access The Main Script.",
+        Thumbnail = {
+            Image = "",
+            Title = "Key System",
+        },
+        URL = "https://github.com/Footagesus/WindUI",
+        SaveKey = true,
+    },
+})
+
+Window:EditOpenButton({
+    Title = "Open",
+    Icon = "visibility",
+    CornerRadius = UDim.new(0,16),
+    StrokeThickness = 2,
+    Color = ColorSequence.new(Color3.fromHex("FF0F7B"), Color3.fromHex("F89B29")),
+    OnlyMobile = false,
+    Enabled = true,
+    Draggable = true,
+})
+
+Window:DisableTopbarButtons({ "Minimize", "Fullscreen" })
+
+--// Tabs
+local PlayerTab = Window:Tab({ Title = "Player", Icon = "person" })
+local ToolsTab = Window:Tab({ Title = "Tools", Icon = "build" })
+local TrollTab = Window:Tab({ Title = "Troll", Icon = "emoji_emotions" })
+
+Window:SelectTab(1)
+
+--// Speed Slider
+PlayerTab:Slider({
+    Title = "WalkSpeed",
+    Step = 1,
+    Value = { Min = 16, Max = 200, Default = 16 },
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.WalkSpeed = value
+    end
+})
+
+--// JumpPower Slider
+PlayerTab:Slider({
+    Title = "JumpPower",
+    Step = 1,
+    Value = { Min = 50, Max = 200, Default = 50 },
+    Callback = function(value)
+        game.Players.LocalPlayer.Character.Humanoid.JumpPower = value
+    end
+})
+
+--// Player Dropdown
+local selectedPlayer = nil
+local dropdownElement
+
+local function getPlayers()
+    local list = {}
+    for _, player in ipairs(game.Players:GetPlayers()) do
+        if player ~= game.Players.LocalPlayer then
+            table.insert(list, player.Name)
+        end
+    end
+    return list
+end
+
+dropdownElement = PlayerTab:Dropdown({
+    Title = "Select Player",
+    Values = getPlayers(),
+    Value = "",
+    Callback = function(p)
+        selectedPlayer = game.Players:FindFirstChild(p)
+    end
+})
+
+PlayerTab:Button({
+    Title = "Refresh Players",
+    Desc = "Updates the player list",
+    Callback = function()
+        dropdownElement:Edit({ Values = getPlayers() })
+    end
+})
+
+--// Teleport to Selected Player
+PlayerTab:Button({
+    Title = "Teleport to Player",
+    Desc = "TP to selected player",
+    Callback = function()
+        if selectedPlayer and selectedPlayer.Character and selectedPlayer.Character:FindFirstChild("HumanoidRootPart") then
+            game.Players.LocalPlayer.Character:MoveTo(selectedPlayer.Character.HumanoidRootPart.Position + Vector3.new(0,3,0))
+        end
+    end
+})
+
+--// Tool Giver - Teleport Tool
+ToolsTab:Button({
+    Title = "Give Teleport Tool",
+    Desc = "Tool that teleports you to where you click",
+    Callback = function()
+        local tool = Instance.new("Tool")
+        tool.RequiresHandle = false
+        tool.Name = "TP Tool"
+        tool.Activated:Connect(function()
+            local mouse = game.Players.LocalPlayer:GetMouse()
+            local pos = mouse.Hit.Position
+            game.Players.LocalPlayer.Character:MoveTo(pos)
+        end)
+        tool.Parent = game.Players.LocalPlayer.Backpack
+    end
+})
+
+--// Tool Giver - Ring Tool (Aura Effect)
+ToolsTab:Button({
+    Title = "Give Ring Tool",
+    Desc = "Fake ring aura visual",
+    Callback = function()
+        local tool = Instance.new("Tool")
+        tool.RequiresHandle = false
+        tool.Name = "Ring Tool"
+        tool.Activated:Connect(function()
+            local char = game.Players.LocalPlayer.Character
+            local ring = Instance.new("Part", char)
+            ring.Shape = Enum.PartType.Cylinder
+            ring.Anchored = false
+            ring.CanCollide = false
+            ring.Size = Vector3.new(0.2, 10, 10)
+            ring.CFrame = char.HumanoidRootPart.CFrame
+            ring.Material = Enum.Material.Neon
+            ring.BrickColor = BrickColor.new("Really red")
+            game:GetService("Debris"):AddItem(ring, 3)
+        end)
+        tool.Parent = game.Players.LocalPlayer.Backpack
+    end
+})
+
+--// Troll Tool - Spin
+TrollTab:Toggle({
+Title = "Spin Player",
+Desc = "Makes you spin endlessly",
+Default = false,
+Callback = function(state)
+local char = game.Players.LocalPlayer.Character
+if state then
+local spin = Instance.new("BodyAngularVelocity", char:FindFirstChild("HumanoidRootPart"))
+spin.AngularVelocity = Vector3.new(0, 15, 0)
+spin.MaxTorque = Vector3.new(0, math.huge, 0)
+spin.Name = "SpinTroll"
+else
+local existing = char:FindFirstChild("HumanoidRootPart"):FindFirstChild("SpinTroll")
+if existing then existing:Destroy() end
+end
+end
+})
+
+--// Fake Error Message
+TrollTab:Button({
+Title = "Fake Error",
+Desc = "Display fake Roblox error popup",
+Callback = function()
+game:GetService("StarterGui"):SetCore("SendNotification", {
+Title = "Error",
+Text = "Disconnected due to unexpected client behavior.",
+Duration = 5,
+Button1 = "Ok"
+})
+end
+})
